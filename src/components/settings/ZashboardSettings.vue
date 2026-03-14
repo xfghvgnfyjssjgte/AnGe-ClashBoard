@@ -20,12 +20,6 @@
           <span>AnGe-ClashBoard</span>
           <span class="ml-3 text-sm font-normal">
             {{ displayVersion }}
-            <span
-              v-if="commitId"
-              class="ml-2 text-xs"
-            >
-              {{ commitId }}
-            </span>
             <span class="ml-3 text-xs text-base-content/70">
               基于开源 zashboard 二次开发
             </span>
@@ -336,7 +330,6 @@ const hasVisibleItems = computed(() => {
     isVisibleImportSettings.value
   )
 })
-const commitId = __COMMIT_ID__
 const displayVersion = computed(() => {
   return getDisplayAppVersion(zashboardVersion.value)
 })
