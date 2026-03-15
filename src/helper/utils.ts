@@ -43,8 +43,8 @@ export const getUrlFromBackend = (end: Omit<Backend, 'uuid'>) => {
   return `${end.protocol}://${end.host}:${end.port}${end.secondaryPath || ''}`
 }
 
-export const shouldUseServerProxy = (end: Omit<Backend, 'uuid'> | Backend | null | undefined) => {
-  return end?.useServerProxy !== false
+export const shouldUseServerProxy = (_end: Omit<Backend, 'uuid'> | Backend | null | undefined) => {
+  return true
 }
 
 export const getLabelFromBackend = (end: Omit<Backend, 'uuid'>) => {
@@ -111,7 +111,6 @@ export const getBackendFromUrl = () => {
       label: query.get('label') || '',
       disableUpgradeCore:
         query.get('disableUpgradeCore') === '1' || query.get('disableUpgradeCore') === 'core',
-      useServerProxy: query.get('relay') === '0' ? false : true,
     }
   }
   return null

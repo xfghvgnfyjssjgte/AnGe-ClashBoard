@@ -7,7 +7,6 @@ export type Backend = {
   uuid: string
   label?: string
   disableUpgradeCore?: boolean
-  useServerProxy?: boolean
 }
 
 export type Config = {
