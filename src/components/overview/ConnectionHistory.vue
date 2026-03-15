@@ -1,5 +1,5 @@
 <template>
-  <div class="card w-full backdrop-blur-none!">
+  <div class="card w-full overflow-hidden backdrop-blur-none!">
     <div class="card-title need-blur flex items-center justify-between px-4 pt-4">
       <div class="flex w-full items-center gap-4 max-sm:flex-col max-sm:items-start">
         <div class="flex flex-1 items-center gap-2">
@@ -60,7 +60,7 @@
     <div class="card-body need-blur gap-0! p-0!">
       <div class="px-4 py-4">
         <div
-          class="stats stats-vertical sm:stats-horizontal bg-base-200 w-full gap-2 shadow max-md:grid max-md:grid-cols-2"
+          class="stats stats-vertical sm:stats-horizontal bg-base-200 w-full gap-2 rounded-[inherit] shadow max-md:grid max-md:grid-cols-2"
         >
           <div class="stat">
             <div class="stat-title text-xs">{{ aggregateSourceLabel }}</div>
@@ -90,7 +90,7 @@
     </div>
     <div
       ref="parentRef"
-      class="h-96 overflow-auto"
+      class="h-96 overflow-auto rounded-b-[inherit]"
       @touchstart.passive.stop
       @touchmove.passive.stop
       @touchend.passive.stop
