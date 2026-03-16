@@ -316,6 +316,8 @@ const zhTW: LANG_MESSAGE = {
   ruleMissCount: '未命中: {count} 次',
   ruleLastMiss: '最後未命中: {time}',
   globalRadius: '全局圓角',
+  strategyPenetration: '策略穿透',
+  collapsePenetration: '收起穿透',
 }
 
 export default zhTW

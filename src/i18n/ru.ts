@@ -325,6 +325,8 @@ const ru: LANG_MESSAGE = {
   ruleMissCount: 'Промах: {count} раз',
   ruleLastMiss: 'Последний промах: {time}',
   globalRadius: 'Глобальный радиус скругления',
+  strategyPenetration: 'Погружение в стратегию',
+  collapsePenetration: 'Скрыть погружение',
 }
 
 export default ru

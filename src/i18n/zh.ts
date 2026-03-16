@@ -316,6 +316,8 @@ const zh: LANG_MESSAGE = {
   ruleMissCount: '未命中: {count} 次',
   ruleLastMiss: '最后未命中: {time}',
   globalRadius: '全局圆角',
+  strategyPenetration: '策略穿透',
+  collapsePenetration: '收起穿透',
 }
 
 export default zh

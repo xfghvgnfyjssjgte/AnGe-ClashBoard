@@ -319,6 +319,8 @@ const en = {
   ruleLastHit: 'Last hit: {time}',
   ruleMissCount: 'Miss: {count} times',
   ruleLastMiss: 'Last miss: {time}',
+  strategyPenetration: 'Strategy Drill',
+  collapsePenetration: 'Hide Drill',
 }
 
 export type LANG_MESSAGE = typeof en

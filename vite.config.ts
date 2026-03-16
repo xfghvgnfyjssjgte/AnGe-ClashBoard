@@ -6,6 +6,12 @@ import { defineConfig } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
 import { version } from './package.json'
 
+const devProxyPort = Number.parseInt(
+  process.env.ZASHBOARD_DEV_PROXY_PORT || process.env.PORT || '2048',
+  10,
+)
+const resolvedDevProxyPort = Number.isFinite(devProxyPort) ? devProxyPort : 2048
+
 const getGitCommitId = (): string => {
   try {
     const commitMessage = execSync('git log -1 --pretty=%B', { encoding: 'utf8' }).trim()
@@ -31,7 +37,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://127.0.0.1:2048',
+        target: `http://127.0.0.1:${resolvedDevProxyPort}`,
         changeOrigin: true,
       },
     },

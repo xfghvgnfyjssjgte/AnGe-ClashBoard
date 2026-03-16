@@ -34,8 +34,8 @@
 </template>
 
 <script setup lang="ts">
-import { collapseGroupMap } from '@/store/settings'
 import { getDescendantProxyGroups, proxyMap } from '@/store/proxies'
+import { collapseGroupMap } from '@/store/settings'
 import { ChevronDownIcon } from '@heroicons/vue/24/outline'
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -45,7 +45,7 @@ const props = defineProps<{
   groupName: string
 }>()
 
-const { locale } = useI18n()
+const { t } = useI18n()
 const isExpanded = ref(false)
 const selectedGroupName = computed(() => proxyMap.value[props.groupName]?.now || '')
 
@@ -75,15 +75,9 @@ const renderedGroups = computed(() => {
   return [selectedGroupName.value, ...descendantGroups.value]
 })
 
-const buttonLabel = computed(() => {
-  const isZh = locale.value.toLowerCase().startsWith('zh')
-
-  if (isZh) {
-    return isExpanded.value ? '收起穿透' : '节点穿透'
-  }
-
-  return isExpanded.value ? 'Hide Descendants' : 'Node Drill'
-})
+const buttonLabel = computed(() =>
+  isExpanded.value ? t('collapsePenetration') : t('strategyPenetration'),
+)
 
 watch(selectedGroupName, () => {
   isExpanded.value = false
