@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.42](https://github.com/liandu2024/AnGe-ClashBoard/compare/v1.41...v1.42) (2026-03-20)
+
+### Bug Fixes
+
+* refine the proxy provider wildcard-category layout so the controls stay aligned in both multi-line subscription summaries and single-line update-only states
+
+### Documentation
+
+* add Docker lossless-upgrade instructions to the README and recommend exporting settings before upgrading
+
 ## [1.41](https://github.com/liandu2024/AnGe-ClashBoard/compare/v1.40...v1.41) (2026-03-20)
 
 ### Features

@@ -4,7 +4,7 @@
 
 AnGe-ClashBoard 是一个基于 `Vue 3 + TypeScript + Vite` 的 Clash 面板，面向 `Clash API`、`Mihomo`、`OpenClash`、`Nikki` 和 `sing-box` 的运行态管理、观测与排错。
 
-当前版本为 `1.41`，基于开源 [zashboard](https://github.com/Zephyruso/zashboard) 二次开发。
+当前版本为 `1.42`，基于开源 [zashboard](https://github.com/Zephyruso/zashboard) 二次开发。
 
 ## 教学视频
 
@@ -68,6 +68,8 @@ curl -fsSL https://raw.githubusercontent.com/liandu2024/AnGe-ClashBoard/main/scr
 
 升级会保留现有数据目录，不会删除你的配置、背景图和规则缓存。
 
+仍然建议你先在面板里执行一次“导出设置”，额外留一份配置备份，以防意外情况。
+
 ```bash
 curl -fsSL https://raw.githubusercontent.com/liandu2024/AnGe-ClashBoard/main/scripts/update.sh | bash
 ```
@@ -104,6 +106,28 @@ docker run -d \
   -v ./data:/app/data \
   ghcr.io/liandu2024/ange-clashboard:latest
 ```
+
+## Docker 无损升级
+
+如果你是通过 `-v ./data:/app/data` 这类挂载方式运行，升级镜像时会保留原有数据目录，属于无损升级。
+
+仍然建议先在面板里导出一次设置，额外备份配置数据后再升级。
+
+```bash
+docker pull ghcr.io/liandu2024/ange-clashboard:latest
+
+docker stop ange-clashboard
+docker rm ange-clashboard
+
+docker run -d \
+  --name ange-clashboard \
+  -p 2048:2048 \
+  -v ./data:/app/data \
+  --restart unless-stopped \
+  ghcr.io/liandu2024/ange-clashboard:latest
+```
+
+如果你之前使用了自定义端口、不同的容器名，或不同的数据目录挂载，请把上面的参数改成你当前正在使用的那一套。
 
 健康检查：
 

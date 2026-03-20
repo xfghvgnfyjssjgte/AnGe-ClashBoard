@@ -5,15 +5,75 @@
     :disable-collapse="shouldShowProviderCategories"
   >
     <template v-slot:title>
-      <div class="flex items-center justify-between gap-2">
-        <div class="flex min-w-0 flex-1 items-center gap-3">
+      <div class="flex items-start justify-between gap-2">
+        <div class="min-w-0 flex-1">
           <div class="text-xl font-medium">
             {{ proxyProvider.name }}
             <span class="text-base-content/60 text-sm font-normal"> ({{ proxiesCount }}) </span>
           </div>
           <div
-            v-if="proxiesTabShow === PROXY_TAB_TYPE.PROVIDER && providerProxyCategoryFeatureEnabled"
-            class="flex shrink-0 items-center gap-2"
+            v-if="subscriptionInfo"
+            class="text-base-content/60 mt-0.5 text-left text-sm"
+          >
+            <div>
+              {{ subscriptionInfo.expireStr }}
+            </div>
+            <div>
+              {{ subscriptionInfo.usageStr }}
+            </div>
+            <div>{{ $t('updated') }} {{ fromNow(proxyProvider.updatedAt) }}</div>
+          </div>
+          <div
+            v-else
+            class="text-base-content/60 mt-0.5 text-left text-sm"
+          >
+            {{ $t('updated') }} {{ fromNow(proxyProvider.updatedAt) }}
+          </div>
+        </div>
+        <div class="flex shrink-0 flex-col items-end gap-2">
+          <div class="flex gap-2">
+            <button
+              v-if="shouldShowProviderCategories"
+              :class="twMerge('btn btn-circle btn-sm z-30')"
+              @click.stop="toggleAllCategoriesCollapsed"
+            >
+              <ChevronUpIcon
+                v-if="hasExpandedCategories"
+                class="h-4 w-4"
+              />
+              <ChevronDownIcon
+                v-else
+                class="h-4 w-4"
+              />
+            </button>
+            <button
+              :class="twMerge('btn btn-circle btn-sm z-30')"
+              @click.stop="healthCheckClickHandler"
+            >
+              <span
+                v-if="isHealthChecking"
+                class="loading loading-spinner loading-xs"
+              ></span>
+              <BoltIcon
+                v-else
+                class="h-4 w-4"
+              />
+            </button>
+            <button
+              v-if="proxyProvider.vehicleType !== 'Inline'"
+              :class="twMerge('btn btn-circle btn-sm z-30')"
+              @click.stop="updateProviderClickHandler"
+            >
+              <ArrowPathIcon :class="twMerge('h-4 w-4', isUpdating ? 'animate-spin' : '')" />
+            </button>
+          </div>
+          <div
+            v-if="
+              subscriptionInfo &&
+              proxiesTabShow === PROXY_TAB_TYPE.PROVIDER &&
+              providerProxyCategoryFeatureEnabled
+            "
+            class="flex justify-end gap-2"
           >
             <div
               @mousedown.stop
@@ -37,60 +97,39 @@
             </button>
           </div>
         </div>
-        <div class="flex gap-2">
-          <button
-            v-if="shouldShowProviderCategories"
-            :class="twMerge('btn btn-circle btn-sm z-30')"
-            @click.stop="toggleAllCategoriesCollapsed"
-          >
-            <ChevronUpIcon
-              v-if="hasExpandedCategories"
-              class="h-4 w-4"
-            />
-            <ChevronDownIcon
-              v-else
-              class="h-4 w-4"
-            />
-          </button>
-          <button
-            :class="twMerge('btn btn-circle btn-sm z-30')"
-            @click.stop="healthCheckClickHandler"
-          >
-            <span
-              v-if="isHealthChecking"
-              class="loading loading-spinner loading-xs"
-            ></span>
-            <BoltIcon
-              v-else
-              class="h-4 w-4"
-            />
-          </button>
-          <button
-            v-if="proxyProvider.vehicleType !== 'Inline'"
-            :class="twMerge('btn btn-circle btn-sm z-30')"
-            @click.stop="updateProviderClickHandler"
-          >
-            <ArrowPathIcon :class="twMerge('h-4 w-4', isUpdating ? 'animate-spin' : '')" />
-          </button>
-        </div>
       </div>
       <div
-        v-if="subscriptionInfo"
-        class="text-base-content/60 mt-0.5 text-left text-sm"
+        v-if="!subscriptionInfo"
+        class="mt-0.5 flex items-start justify-between gap-2"
       >
-        <div>
-          {{ subscriptionInfo.expireStr }}
+        <div class="text-base-content/60 min-w-0 flex-1 text-left text-sm">
+          {{ $t('updated') }} {{ fromNow(proxyProvider.updatedAt) }}
         </div>
-        <div>
-          {{ subscriptionInfo.usageStr }}
+        <div
+          v-if="proxiesTabShow === PROXY_TAB_TYPE.PROVIDER && providerProxyCategoryFeatureEnabled"
+          class="flex shrink-0 justify-end gap-2"
+        >
+          <div
+            @mousedown.stop
+            @click.stop
+            @mouseenter="(e) => showTip(e, t('proxyCategoryTooltip'))"
+            @mouseleave="hideTip()"
+          >
+            <TextInput
+              class="w-16"
+              v-model="providerCategoryWildcardModel"
+              clearable
+            />
+          </div>
+          <button
+            class="btn btn-sm min-w-16"
+            :class="providerCategoryEnabled ? 'btn-neutral' : 'btn-ghost'"
+            :disabled="!providerCategoryEnabled && !canEnableProviderCategory"
+            @click.stop="toggleProviderCategory"
+          >
+            {{ providerCategoryEnabled ? $t('cancel') : $t('proxyCategory') }}
+          </button>
         </div>
-        <div>{{ $t('updated') }} {{ fromNow(proxyProvider.updatedAt) }}</div>
-      </div>
-      <div
-        v-else
-        class="text-base-content/60 mt-0.5 text-left text-sm"
-      >
-        {{ $t('updated') }} {{ fromNow(proxyProvider.updatedAt) }}
       </div>
     </template>
     <template v-slot:preview>
