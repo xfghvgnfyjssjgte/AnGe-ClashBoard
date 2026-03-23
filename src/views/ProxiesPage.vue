@@ -260,13 +260,10 @@ const renderComponent = computed(() => {
 })
 
 const displayTwoColumns = computed(() => {
-  if (proxiesTabShow.value === PROXY_TAB_TYPE.DOMAIN) {
+  if (proxiesTabShow.value !== PROXY_TAB_TYPE.POLICY) {
     return false
   }
 
-  if (proxiesTabShow.value === PROXY_TAB_TYPE.PROVIDER && isMiddleScreen.value) {
-    return false
-  }
   return twoColumnProxyGroup.value && renderGroups.value.length > 1
 })
 

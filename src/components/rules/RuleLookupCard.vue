@@ -67,7 +67,7 @@
 
       <div class="flex flex-col gap-1 text-sm font-normal">
         <div
-          v-for="match in result.matches.slice(0, 5)"
+          v-for="match in result.matches.slice(0, 10)"
           :key="`${result.providerName}-${match.line}-${match.value}`"
           class="text-base-content/80"
         >

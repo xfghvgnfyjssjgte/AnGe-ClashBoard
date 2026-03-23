@@ -37,6 +37,12 @@
                 当前还有 {{ ruleLookupUnsupported.length }} 个 `.mrs` 规则集暂不支持解析。
               </div>
             </div>
+            <div
+              v-else
+              class="card p-2 text-sm"
+            >
+              只查询10行最相关数据：
+            </div>
             <RuleFallbackCard
               v-if="ruleLookupResults.length === 0 && ruleLookupFallbackRule"
               :rule="ruleLookupFallbackRule"

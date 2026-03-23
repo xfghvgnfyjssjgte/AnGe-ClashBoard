@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.62](https://github.com/liandu2024/AnGe-ClashBoard/compare/v1.61...v1.62) (2026-03-23)
+
+### Features
+
+* rank keyword-based rule lookups by relevance, show up to 10 matched lines per rule set, and add a clear reminder that only the 10 most relevant lines are displayed
+
+### Bug Fixes
+
+* limit the two-column proxy layout to the policy tab so node and subscription views stay in a single-column layout even when the setting is enabled
+* bundle the Linux `mihomo` binary in the repository so Linux source runs can parse `.mrs` rule providers without manual setup
+
 ## [1.61](https://github.com/liandu2024/AnGe-ClashBoard/compare/v1.60...v1.61) (2026-03-23)
 
 ### Bug Fixes

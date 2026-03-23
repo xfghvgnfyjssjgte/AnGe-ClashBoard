@@ -1158,6 +1158,75 @@ const isKeywordMatch = (keyword, ruleValue) => {
   return Boolean(keyword && normalizedRule && normalizedRule.includes(keyword))
 }
 
+const getKeywordMatchScore = (keyword, match) => {
+  const normalizedRule = normalizeDomain(match.value)
+
+  if (!keyword || !normalizedRule) {
+    return Number.MIN_SAFE_INTEGER
+  }
+
+  const index = normalizedRule.indexOf(keyword)
+
+  if (index === -1) {
+    return Number.MIN_SAFE_INTEGER
+  }
+
+  const previousChar = normalizedRule[index - 1] || ''
+  const nextChar = normalizedRule[index + keyword.length] || ''
+  let score = 0
+
+  if (normalizedRule === keyword) {
+    score += 400
+  }
+
+  if (index === 0) {
+    score += 120
+  } else if (/[-_.]/.test(previousChar)) {
+    score += 40
+  }
+
+  if (!nextChar) {
+    score += 160
+  } else if (nextChar === '.') {
+    score += 140
+  } else if (nextChar === '-') {
+    score += 100
+  } else if (nextChar === '_') {
+    score += 80
+  } else {
+    score -= 10
+  }
+
+  if (match.mode === 'domain') {
+    score += 30
+  } else if (match.mode === 'suffix') {
+    score += 20
+  } else if (match.mode === 'keyword') {
+    score += 10
+  }
+
+  score -= index * 8
+  score -= normalizedRule.length
+
+  return score
+}
+
+const sortRuleMatchesByLookup = (lookup, matches) => {
+  if (lookup.type !== 'keyword') {
+    return matches
+  }
+
+  return [...matches].sort((left, right) => {
+    const scoreDelta = getKeywordMatchScore(lookup.value, right) - getKeywordMatchScore(lookup.value, left)
+
+    if (scoreDelta !== 0) {
+      return scoreDelta
+    }
+
+    return left.line - right.line
+  })
+}
+
 const parseIPv4Address = (value) => {
   const parts = value.split('.')
 
@@ -1683,7 +1752,10 @@ const searchRuleProviderCache = async (query) => {
   const unsupported = []
 
   for (const provider of cachedProviders) {
-    const providerMatches = findMatchesInTextRules(lookup, provider.body)
+    const providerMatches = sortRuleMatchesByLookup(
+      lookup,
+      findMatchesInTextRules(lookup, provider.body),
+    )
 
     if (providerMatches.length > 0) {
       matches.push({
