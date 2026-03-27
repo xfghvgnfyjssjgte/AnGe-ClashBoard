@@ -604,11 +604,131 @@ function stringifyManagedRuleSourceConfig(providers) {
   ].join('\n')
 }
 
+function toManagedRuleProviderEntry(provider) {
+  const url = normalizeRuleProviderUrl(provider?.url || provider?.source_url)
+
+  if (!provider?.name || !url) {
+    return null
+  }
+
+  return {
+    name: String(provider.name).trim(),
+    behavior: typeof provider.behavior === 'string' ? provider.behavior : '',
+    format: typeof provider.format === 'string' ? provider.format : '',
+    interval:
+      typeof provider.interval === 'number'
+        ? provider.interval
+        : Number.parseInt(
+            String(provider.interval ?? provider.interval_seconds ?? '0'),
+            10,
+          ) || 0,
+    url,
+  }
+}
+
+function getManagedRuleSourceCandidateMap() {
+  const candidateMap = new Map()
+  const pushCandidate = (provider) => {
+    const entry = toManagedRuleProviderEntry(provider)
+
+    if (!entry || candidateMap.has(entry.name)) {
+      return
+    }
+
+    candidateMap.set(entry.name, entry)
+  }
+
+  if (fs.existsSync(defaultRuleSourceConfigPath)) {
+    extractRuleProviderEntries(defaultRuleSourceConfigPath).forEach(pushCandidate)
+  }
+
+  getCachedRuleProviderStatement.all().forEach(pushCandidate)
+
+  if (fs.existsSync(bundledRuleSourceConfigPath)) {
+    extractRuleProviderEntries(bundledRuleSourceConfigPath).forEach(pushCandidate)
+  }
+
+  return candidateMap
+}
+
+async function syncManagedRuleSourceConfigFromController(options = {}) {
+  if (
+    process.env.ZASHBOARD_RULE_SOURCE_PATH ||
+    ruleSourceConfigPath !== defaultRuleSourceConfigPath
+  ) {
+    return {
+      changed: false,
+      updatedProviders: 0,
+      path: ruleSourceConfigPath,
+      skipped: true,
+    }
+  }
+
+  const backend = options.backend || readActiveBackendConfig()
+
+  if (!backend) {
+    return {
+      changed: false,
+      updatedProviders: 0,
+      path: ruleSourceConfigPath,
+      skipped: true,
+      error: 'No active backend configured',
+    }
+  }
+
+  const requestedProviderNames =
+    Array.isArray(options.providerNames) && options.providerNames.length > 0
+      ? [...new Set(options.providerNames.map((name) => String(name || '').trim()).filter(Boolean))]
+      : null
+  const controllerRules = await fetchControllerRules(backend)
+  const referencedProviderNames =
+    requestedProviderNames || getReferencedProviderNamesFromControllerRules(controllerRules)
+  const controllerProviders = await fetchControllerRuleProviders(backend)
+  const controllerProviderMap = new Map(
+    controllerProviders.map((provider) => [String(provider?.name || '').trim(), provider]),
+  )
+  const candidateMap = getManagedRuleSourceCandidateMap()
+  const nextProviders = referencedProviderNames
+    .map((providerName) => {
+      const baseProvider = candidateMap.get(providerName)
+
+      if (!baseProvider) {
+        return null
+      }
+
+      const controllerProvider = controllerProviderMap.get(providerName)
+
+      return {
+        ...baseProvider,
+        behavior: controllerProvider?.behavior || baseProvider.behavior,
+        format: controllerProvider?.format || baseProvider.format,
+      }
+    })
+    .filter(Boolean)
+  const currentProviderEntries = fs.existsSync(defaultRuleSourceConfigPath)
+    ? extractRuleProviderEntries(defaultRuleSourceConfigPath)
+    : []
+  const defaultConfigMissing = !fs.existsSync(defaultRuleSourceConfigPath)
+  const currentProviderSignature = getRuleProviderSignature(currentProviderEntries)
+  const nextProviderSignature = getRuleProviderSignature(nextProviders)
+
+  if (defaultConfigMissing || currentProviderSignature !== nextProviderSignature) {
+    fs.mkdirSync(path.dirname(defaultRuleSourceConfigPath), { recursive: true })
+    fs.writeFileSync(defaultRuleSourceConfigPath, stringifyManagedRuleSourceConfig(nextProviders))
+  }
+
+  return {
+    changed: defaultConfigMissing || currentProviderSignature !== nextProviderSignature,
+    updatedProviders: nextProviders.length,
+    path: defaultRuleSourceConfigPath,
+    skipped: false,
+  }
+}
+
 function syncManagedRuleSourceConfigFromBundled() {
   if (
     process.env.ZASHBOARD_RULE_SOURCE_PATH ||
     ruleSourceConfigPath !== defaultRuleSourceConfigPath ||
-    !fs.existsSync(defaultRuleSourceConfigPath) ||
     !fs.existsSync(bundledRuleSourceConfigPath)
   ) {
     return {
@@ -620,6 +740,7 @@ function syncManagedRuleSourceConfigFromBundled() {
   }
 
   const bundledProviderEntries = extractRuleProviderEntries(bundledRuleSourceConfigPath)
+  const defaultConfigMissing = !fs.existsSync(defaultRuleSourceConfigPath)
   const currentProviderEntries = fs.existsSync(defaultRuleSourceConfigPath)
     ? extractRuleProviderEntries(defaultRuleSourceConfigPath)
     : []
@@ -649,7 +770,8 @@ function syncManagedRuleSourceConfigFromBundled() {
     }
   }
 
-  if (currentProviderSignature !== bundledProviderSignature) {
+  if (defaultConfigMissing || currentProviderSignature !== bundledProviderSignature) {
+    fs.mkdirSync(path.dirname(defaultRuleSourceConfigPath), { recursive: true })
     fs.writeFileSync(
       defaultRuleSourceConfigPath,
       stringifyManagedRuleSourceConfig(bundledProviderEntries),
@@ -657,7 +779,7 @@ function syncManagedRuleSourceConfigFromBundled() {
   }
 
   return {
-    changed: currentProviderSignature !== bundledProviderSignature,
+    changed: defaultConfigMissing || currentProviderSignature !== bundledProviderSignature,
     updatedProviders,
     path: defaultRuleSourceConfigPath,
     skipped: false,
@@ -2243,6 +2365,7 @@ const updateRuleProviderCache = async (options = {}) => {
       Array.isArray(options.providerNames) && options.providerNames.length > 0
         ? [...new Set(options.providerNames.map((name) => String(name || '').trim()).filter(Boolean))]
         : null
+    const backend = options.backend || readActiveBackendConfig()
     let ruleSourceConfigSync = {
       changed: false,
       updatedProviders: 0,
@@ -2254,14 +2377,27 @@ const updateRuleProviderCache = async (options = {}) => {
     try {
       ruleSourceConfigSync = {
         ...ruleSourceConfigSync,
-        ...syncManagedRuleSourceConfigFromBundled(),
+        ...(await syncManagedRuleSourceConfigFromController({
+          backend,
+          providerNames,
+        })),
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
-      console.warn('Failed to sync managed rule-source.yaml from bundled config before refresh', error)
-      ruleSourceConfigSync = {
-        ...ruleSourceConfigSync,
-        error: message,
+      console.warn('Failed to sync managed rule-source.yaml from controller before refresh', error)
+
+      try {
+        ruleSourceConfigSync = {
+          ...ruleSourceConfigSync,
+          ...syncManagedRuleSourceConfigFromBundled(),
+          error: message,
+        }
+      } catch (fallbackError) {
+        console.warn('Failed to sync managed rule-source.yaml from bundled config before refresh', fallbackError)
+        ruleSourceConfigSync = {
+          ...ruleSourceConfigSync,
+          error: message,
+        }
       }
     }
 
