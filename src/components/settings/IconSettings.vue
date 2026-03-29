@@ -1,10 +1,10 @@
 <template>
   <div class="icon-settings-shell flex flex-col gap-3">
-    <div class="icon-settings-header flex items-end justify-between gap-3">
+    <div class="icon-settings-header flex items-center justify-between gap-3">
       <div class="settings-title py-0">
         {{ $t('icon') }}
       </div>
-      <div class="icon-settings-trigger flex items-end gap-2">
+      <div class="icon-settings-trigger flex items-center gap-2">
         {{ $t('customIcon') }}
         <template v-if="iconReflectList.length"> ({{ iconReflectList.length }}) </template>
         <button
